@@ -11,6 +11,9 @@ using std::vector;
  * Initializes Unscented Kalman filter
  */
 UKF::UKF() {
+  is_initialized_ = false;
+  time_us_ = 0;
+
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
@@ -19,15 +22,9 @@ UKF::UKF() {
 
   // initial state vector
   x_ = VectorXd(5);
-  x_ << 1, 1, 1, 1, 1;
 
   // initial covariance matrix
   P_ = MatrixXd(5, 5);
-  P_ << 1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0, 1 ,0, 0,
-        0, 0, 0, 1, 0,
-        0, 0, 0, 0, 1;
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
   std_a_ = 0.2;
@@ -58,8 +55,12 @@ UKF::UKF() {
   Hint: one or more values initialized above might be wildly off...
   */
 
-  is_initialized_ = false;
-  time_us_ = 0;
+  x_ << 1, 1, 1, 1, 1;
+  P_ << 1, 0, 0, 0, 0,
+        0, 1, 0, 0, 0,
+        0, 0, 1 ,0, 0,
+        0, 0, 0, 1, 0,
+        0, 0, 0, 0, 1;
 
   //set state dimension
   int n_x_ = 5;
@@ -84,6 +85,9 @@ UKF::UKF() {
 
   //create example matrix with predicted sigma points
   Xsig_pred_ = MatrixXd(n_x_, 2 * n_aug_ + 1);
+
+  //create matrix for sigma points in measurement space
+  Zsig_ = MatrixXd(n_z_, 2 * n_aug_ + 1);
 
 }
 
@@ -279,9 +283,6 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
   // (7.27)
 
-  //create matrix for sigma points in measurement space
-  MatrixXd Zsig_ = MatrixXd(n_z_, 2 * n_aug_ + 1);
-
   //transform sigma points into measurement space
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
 
@@ -376,9 +377,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   */
 
   // (7.27)
-
-  //create matrix for sigma points in measurement space
-  MatrixXd Zsig_ = MatrixXd(n_z_, 2 * n_aug_ + 1);
 
   //transform sigma points into measurement space
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points

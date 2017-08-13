@@ -70,6 +70,9 @@ public:
   ///* Sigma point spreading parameter
   double lambda_;
 
+  ///* measured sigma points matrix
+  MatrixXd Zsig_;
+
 
   /**
    * Constructor
