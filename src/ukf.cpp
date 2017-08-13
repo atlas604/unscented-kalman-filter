@@ -11,9 +11,6 @@ using std::vector;
  * Initializes Unscented Kalman filter
  */
 UKF::UKF() {
-  is_initialized_ = false;
-  time_us_ = 0;
-
   // if this is false, laser measurements will be ignored (except during init)
   use_laser_ = true;
 
@@ -54,6 +51,9 @@ UKF::UKF() {
 
   Hint: one or more values initialized above might be wildly off...
   */
+
+  is_initialized_ = false;
+  time_us_ = 0;
 
   x_ << 1, 1, 1, 1, 1;
   P_ << 1, 0, 0, 0, 0,
