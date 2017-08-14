@@ -326,7 +326,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   cout << "Radar: " << endl;
 
   // (7.27)
-
   //set measurement dimension, radar can measure r, phi, and r_dot
   int n_z_ = 3;
 
@@ -374,13 +373,16 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
   //add measurement noise covariance matrix
   MatrixXd R = MatrixXd(n_z_,n_z_);
-  R <<    std_radr_*std_radr_, 0, 0,
-          0, std_radphi_*std_radphi_, 0,
-          0, 0,std_radrd_*std_radrd_;
+  R <<  std_radr_*std_radr_, 0, 0,
+        0, std_radphi_*std_radphi_, 0,
+        0, 0,std_radrd_*std_radrd_;
   S = S + R;
 
-
   // update radar (7.30)
+
+  //create example vector for incoming radar measurement
+  VectorXd z = VectorXd(n_z_);
+
   //create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x_, n_z_);
 
@@ -407,7 +409,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   MatrixXd K = Tc * S.inverse();
 
   //residual
-  VectorXd z_diff = Zsig_ - z_pred;
+  VectorXd z_diff = z - z_pred;
 
   //angle normalization
   while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
