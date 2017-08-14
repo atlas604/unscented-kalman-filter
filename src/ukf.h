@@ -64,16 +64,10 @@ public:
   ///* Augmented state dimension
   int n_aug_;
 
-  ///* Measurement dimension
-  int n_z_;
-
   ///* Sigma point spreading parameter
   double lambda_;
 
-  ///* measured sigma points matrix
-  MatrixXd Zsig_;
-
-
+  
   /**
    * Constructor
    */
