@@ -12,10 +12,10 @@ using std::vector;
  */
 UKF::UKF() {
   // if this is false, laser measurements will be ignored (except during init)
-  use_laser_ = false;
+  use_laser_ = true;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = false;
+  use_radar_ = true;
 
   // initial state vector
   x_ = VectorXd(5);
@@ -63,19 +63,19 @@ UKF::UKF() {
         0, 0, 0, 0, 1;
 
   //set state dimension
-  int n_x_ = 5;
+  n_x_ = 5;
 
   //set augmented dimension
-  int n_aug_ = 7;
+  n_aug_ = 7;
 
   //set measurement dimension, radar can measure r, phi, and r_dot
-  int n_z_ = 3;
+  n_z_ = 3;
 
   //define spreading parameter
-  double lambda_ = 3 - n_aug_;
+  lambda_ = 3 - n_aug_;
 
   //set vector for weights
-  VectorXd weights_ = VectorXd(2*n_aug_+1);
+  weights_ = VectorXd(2*n_aug_+1);
   double weight_0 = lambda_/(lambda_+n_aug_);
   weights_(0) = weight_0;
   for (int i=1; i<2*n_aug_+1; i++) {   //2n+1 weights
@@ -117,15 +117,15 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
-      x_(0) = 1; // meas_package.raw_measurements_(0)*cos(meas_package.raw_measurements_(1)); // rho*cos(theta)
-      x_(1) = 1; // meas_package.raw_measurements_(0)*sin(meas_package.raw_measurements_(1)); // rho*sin(theta)
+      x_(0) = meas_package.raw_measurements_(0)*cos(meas_package.raw_measurements_(1)); // rho*cos(theta)
+      x_(1) = meas_package.raw_measurements_(0)*sin(meas_package.raw_measurements_(1)); // rho*sin(theta)
     }
     else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
       /**
       Initialize state.
       */
-      x_(0) = 1; // meas_package.raw_measurements_(0);
-      x_(1) = 1; // meas_package.raw_measurements_(1);
+      x_(0) = meas_package.raw_measurements_(0);
+      x_(1) = meas_package.raw_measurements_(1);
     }
 
     time_us_ = meas_package.timestamp_;
@@ -162,7 +162,6 @@ void UKF::Prediction(double delta_t) {
   */
 
   // augmentation (7.18)
-
   //create augmented mean vector
   VectorXd x_aug = VectorXd(7);
 
@@ -382,7 +381,6 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
   */
 
   // (7.27)
-
   //transform sigma points into measurement space
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //2n+1 simga points
 
