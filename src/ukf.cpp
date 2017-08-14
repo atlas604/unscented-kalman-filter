@@ -12,10 +12,10 @@ using std::vector;
  */
 UKF::UKF() {
   // if this is false, laser measurements will be ignored (except during init)
-  use_laser_ = true;
+  use_laser_ = false;
 
   // if this is false, radar measurements will be ignored (except during init)
-  use_radar_ = true;
+  use_radar_ = false;
 
   // initial state vector
   x_ = VectorXd(5);
@@ -117,15 +117,15 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
-      x_(0) = meas_package.raw_measurements_(0)*cos(meas_package.raw_measurements_(1)); // rho*cos(theta)
-      x_(1) = meas_package.raw_measurements_(0)*sin(meas_package.raw_measurements_(1)); // rho*sin(theta)
+      x_(0) = 1; // meas_package.raw_measurements_(0)*cos(meas_package.raw_measurements_(1)); // rho*cos(theta)
+      x_(1) = 1; // meas_package.raw_measurements_(0)*sin(meas_package.raw_measurements_(1)); // rho*sin(theta)
     }
     else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
       /**
       Initialize state.
       */
-      x_(0) = meas_package.raw_measurements_(0);
-      x_(1) = meas_package.raw_measurements_(1);
+      x_(0) = 1; // meas_package.raw_measurements_(0);
+      x_(1) = 1; // meas_package.raw_measurements_(1);
     }
 
     time_us_ = meas_package.timestamp_;
@@ -134,7 +134,9 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
   }
 
-  float delta_t = (meas_package.timestamp_ - time_us_) / 1000000.0;
+  double delta_t = (meas_package.timestamp_ - time_us_) / 1000000.0;
+  time_us_ = meas_package.timestamp_;
+
   Prediction(delta_t);
 
   if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
@@ -238,32 +240,33 @@ void UKF::Prediction(double delta_t) {
   }
 
   // predict mean and covariance (7.24)
-  // set weights
-  double weight_0 = lambda_/(lambda_+n_aug_);
-  weights_(0) = weight_0;
-  for (int i=1; i<2*n_aug_+1; i++) {  //2n+1 weights
-    double weight = 0.5/(n_aug_+lambda_);
-    weights_(i) = weight;
-  }
+  //create vector for predicted state
+  VectorXd x = VectorXd(n_x_);
+
+  //create covariance matrix for prediction
+  MatrixXd P = MatrixXd(n_x_, n_x_);
 
   //predicted state mean
-  x_.fill(0.0);
+  x.fill(0.0);
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
-    x_ = x_+ weights_(i) * Xsig_pred_.col(i);
+    x = x+ weights_(i) * Xsig_pred_.col(i);
   }
 
   //predicted state covariance matrix
-  P_.fill(0.0);
+  P.fill(0.0);
   for (int i = 0; i < 2 * n_aug_ + 1; i++) {  //iterate over sigma points
 
     // state difference
-    VectorXd x_diff = Xsig_pred_.col(i) - x_;
+    VectorXd x_diff = Xsig_pred_.col(i) - x;
     //angle normalization
     while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
     while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
 
-    P_ = P_ + weights_(i) * x_diff * x_diff.transpose() ;
+    P = P + weights_(i) * x_diff * x_diff.transpose() ;
   }
+
+  x_ = x;
+  P_ = P;
 
 }
 
@@ -349,8 +352,10 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   //Kalman gain K;
   MatrixXd K = Tc * S.inverse();
 
+  VectorXd z = VectorXd(n_z_);
+
   //residual
-  VectorXd z_diff = VectorXd(n_z_) - z_pred;
+  VectorXd z_diff = z - z_pred;
 
   //angle normalization
   while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
